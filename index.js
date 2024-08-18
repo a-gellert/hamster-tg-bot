@@ -4,7 +4,16 @@ const TELEGRAM_URI = '7501712919:AAFhhW0G6Yb-qjiRA-EaW43r3Jg6ZLZtS4I'
 
 const EVENTS_DELAY = 20000;
 const MAX_KEYS_PER_GAME_PER_DAY = 6;
-app.set('port', process.env.PORT || 80);
+
+
+const port = process.env.PORT || 3000;
+
+const http = require('http');
+
+const server = http.createServer();
+server.listen(port);
+
+
 let text = '';
 let chatId = 1;
 let gameChoice = 1;

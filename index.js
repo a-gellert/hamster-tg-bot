@@ -6,12 +6,12 @@ const EVENTS_DELAY = 20000;
 const MAX_KEYS_PER_GAME_PER_DAY = 6;
 
 
-const port = process.env.PORT || 3000;
+// const port = process.env.PORT || 3000;
 
-const http = require('http');
+// const http = require('http');
 
-const server = http.createServer();
-server.listen(port);
+// const server = http.createServer();
+// server.listen(port);
 
 
 let text = '';

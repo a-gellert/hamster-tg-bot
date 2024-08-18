@@ -1,6 +1,6 @@
 const TelegramApi = require('node-telegram-bot-api');
 
-const TELEGRAM_URI = '7501712919:AAFhhW0G6Yb-qjiRA-EaW43r3Jg6ZLZtS4I'
+//const TELEGRAM_URI = '7501712919:AAFhhW0G6Yb-qjiRA-EaW43r3Jg6ZLZtS4I'
 
 const EVENTS_DELAY = 20000;
 const MAX_KEYS_PER_GAME_PER_DAY = 6;

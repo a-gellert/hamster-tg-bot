@@ -1,18 +1,18 @@
 const TelegramApi = require('node-telegram-bot-api');
 
-//const TELEGRAM_URI = '7501712919:AAFhhW0G6Yb-qjiRA-EaW43r3Jg6ZLZtS4I'
+const TELEGRAM_URI = '7501712919:AAFhhW0G6Yb-qjiRA-EaW43r3Jg6ZLZtS4I'
 
 const EVENTS_DELAY = 20000;
 const MAX_KEYS_PER_GAME_PER_DAY = 6;
 
 
-// const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-// const http = require('http');
+const http = require('http');
 
-// const server = http.createServer();
-// server.listen(port);
-
+const server = http.createServer();
+server.listen(port);
+let chats = [];
 
 let text = '';
 let chatId = 1;
@@ -65,12 +65,13 @@ const games = {
 };
 
 const bot = new TelegramApi(TELEGRAM_URI, { polling: true })
+
 const gameSelectOptions = {
     reply_markup: JSON.stringify({
         inline_keyboard: [
-            [{ text: 'Riding Extreme 3D', callback_data: '001' }, { text: 'Chain Cube 2048', callback_data: '002' }],
-            [{ text: 'My Clone Army', callback_data: '003' }, { text: 'Train Miner', callback_data: '004' }],
-            [{ text: 'MergeAway', callback_data: '005' }, { text: 'Twerk Race 3D', callback_data: '006' }],
+            [{ text: `${String.fromCodePoint(0x1F6B5)}Riding Extreme 3D`, callback_data: '001' }, { text: `${String.fromCodePoint(0x1F3B2)}Chain Cube 2048`, callback_data: '002' }],
+            [{ text: `${String.fromCodePoint(0x1FAC2)}My Clone Army`, callback_data: '003' }, { text: `${String.fromCodePoint(0x1F682)}Train Miner`, callback_data: '004' }],
+            [{ text: `${String.fromCodePoint(0x1F5DD)}MergeAway`, callback_data: '005' }, { text: `${String.fromCodePoint(0x1F3C3)}Twerk Race 3D`, callback_data: '006' }],
         ]
     })
 }
@@ -86,7 +87,7 @@ const countOfKeys = {
 const againOptions = {
     reply_markup: JSON.stringify({
         inline_keyboard: [
-            [{ text: 'Сгенерировать ещё', callback_data: '/again' }],
+            [{ text: `${String.fromCodePoint(0x1F504)}Сгенерировать ещё${String.fromCodePoint(0x1F504)}\n${String.fromCodePoint(0x1F504)}Generate again${String.fromCodePoint(0x1F504)}`, callback_data: '/again' }],
         ]
     })
 }
@@ -99,27 +100,37 @@ bot.on('message', async msg => {
     text = msg.text;
     chatId = msg.chat.id;
     if (text === '/start') {
-        console.log(msg);
-        await bot.sendMessage(chatId, 'Выберите игру', gameSelectOptions);
-    }
-    if (text === '1') {
-        await bot.sendMessage(chatId, 'ride');
+        await bot.sendMessage(chatId, 'Выберите игру\nChoose the game', gameSelectOptions);
     }
     if (text === '/testik') {
-        await bot.sendMessage(chatId, 'Тестируем');
-        await cl.sendRequest()
+        await bot.sendMessage(chatId, `Тестируем`);
+        //   await cl.sendRequest()
     }
 })
 
 bot.on('callback_query', async msg => {
     const data = msg.data;
+    console.log(data);
     chatId = msg.message.chat.id;
 
-    let cl = new Client(msg.id)
+    const subscribe = await bot.getChatMember(-1002210612742, msg.from.id);
+
+    if (subscribe.status == 'left' || subscribe.status == 'kicked') {
+
+
+        bot.sendMessage(msg.from.id, `Генератор доступен только для подписчиков канала Криптобаза, подпишитесь и попробуйте снова\nThe generator is only available to subscribers of the "Криптобаза" channel, subscribe and try again \nhttps://t.me/cryptonbaza`, againOptions);
+
+        return;
+    }
+
+    if (chats.indexOf(chatId) >= 0) {
+        await bot.sendMessage(chatId, 'Ключи уже генерируются, дождитесь пока не закончится предыдущая генерация\nThe keys are already being generated, wait until the previous generation is over');
+        return;
+    }
 
     if (data === '/again') {
-        console.log(msg);
-        await bot.sendMessage(chatId, 'Выберите игру', gameSelectOptions);
+
+        await bot.sendMessage(chatId, 'Выберите игру\nChoose the game', gameSelectOptions);
     }
 
 
@@ -150,29 +161,33 @@ bot.on('callback_query', async msg => {
 
     if (data == '1') {
         keyCount = 1;
-        await bot.sendMessage(chatId, `Играем в игрушки, через 5-10 минут скинем код, ожидайте`);
-        await cl.sendRequest()
+        generate();
     }
     else if (data == '2') {
         keyCount = 2;
-        await bot.sendMessage(chatId, `Играем в игрушки, через 5-10 минут скинем код, ожидайте`);
-        await cl.sendRequest()
+        generate();
     }
     else if (data == '3') {
         keyCount = 3;
-        await bot.sendMessage(chatId, `Играем в игрушки, через 5-10 минут скинем код, ожидайте`);
-        await cl.sendRequest()
+        generate();
     }
     else if (data == '4') {
         keyCount = 4;
-        await bot.sendMessage(chatId, `Играем в игрушки, через 5-10 минут скинем код, ожидайте`);
-        await cl.sendRequest()
+        generate();
     }
+    console.log(msg.message.chat);
 })
-
+const generate = async () => {
+    let cl = new Client(chatId, keyCount, gameChoice);
+    chats.push(chatId);
+    await bot.sendMessage(chatId, `Играем в игрушки, через 5-10 минут скинем код, ожидайте\nThe keys will be generated in 5-10 minutes`);
+    await cl.sendRequest()
+}
 class Client {
-    constructor(chatId) {
-
+    constructor(chatId, keyCount, gameChoice) {
+        this.chatIdClient = chatId;
+        this.keyCount = keyCount;
+        this.gameChoice = gameChoice;
     }
     generateClientId = () => {
         const timestamp = Date.now();
@@ -182,7 +197,6 @@ class Client {
 
     login = async (clientId, appToken) => {
 
-        console.log("login");
 
         const response = await fetch('https://api.gamepromo.io/promo/login-client', {
             method: 'POST',
@@ -205,6 +219,7 @@ class Client {
     }
 
     emulateProgress = async (clientToken, promoId) => {
+
         const response = await fetch('https://api.gamepromo.io/promo/register-event', {
             method: 'POST',
             headers: {
@@ -226,6 +241,7 @@ class Client {
     };
 
     generateKey = async (clientToken, promoId) => {
+
         const response = await fetch('https://api.gamepromo.io/promo/create-code', {
             method: 'POST',
             headers: {
@@ -236,18 +252,15 @@ class Client {
                 promoId
             })
         });
-        console.log(`${response.status} - ${response.statusText}`);
 
         if (!response.ok) {
-            await bot.sendMessage(this.chatId, `Ошибка, попробуйте позже`, againOptions);
-            throw new Error('Failed to generate key');
+            await bot.sendMessage(this.chatIdClient, `Ошибка, попробуйте позже`, againOptions);
+            console.log('Failed to generate key');
 
         }
 
         const data = await response.json();
 
-        console.log(`response - ${JSON.stringify(data)}`);
-        console.log(`response - ${data.promoCode}`);
         return data.promoCode;
     };
 
@@ -264,7 +277,7 @@ class Client {
 
     sendRequest = async () => {
 
-        const game = games[gameChoice];
+        const game = games[this.gameChoice];
 
         const storageKey = `keys_generated_${game.name}`;
 
@@ -286,11 +299,10 @@ class Client {
                 return null;
             }
 
-            for (let i = 0; i < 11; i++) {
+            for (let i = 0; i < game.attemptsNumber; i++) {
                 await this.sleep(game.eventsDelay * this.delayRandom());
                 const hasCode = await this.emulateProgress(clientToken, game.promoId);
-                console.log(`hash - ${hasCode}`);
-                updateProgress(((100 / game.attemptsNumber) / keyCount), 'Emulating progress...');
+                updateProgress(((100 / game.attemptsNumber) / this.keyCount), 'Emulating progress...');
                 if (hasCode) {
                     break;
                 }
@@ -298,7 +310,7 @@ class Client {
 
             try {
                 const key = await this.generateKey(clientToken, game.promoId);
-                updateProgress(30 / keyCount, 'Generating key...');
+                updateProgress(30 / this.keyCount, 'Generating key...');
                 return key;
             } catch (error) {
                 console.log(`Failed to generate key: ${error.message}`);
@@ -306,22 +318,22 @@ class Client {
             }
         };
 
-        const keys = await Promise.all(Array.from({ length: keyCount }, generateKeyProcess));
+        const keys = await Promise.all(Array.from({ length: this.keyCount }, generateKeyProcess));
 
         if (keys.length >= 1) {
             console.log(keys);
-            console.log(keys[0]);
-
+            await bot.sendMessage(this.chatIdClient, `Готово ${String.fromCodePoint(0x1F973)}`, againOptions);
+            chats.splice(chats.indexOf(this.chatIdClient), 1);
             keys.forEach(key => {
                 if (key.length < 2) {
-                    bot.sendMessage(this.chatId, "Ошибка генерации попробуйте позже")
+                    bot.sendMessage(this.chatIdClient, "Ошибка генерации, попробуйте позже\nGeneration error, try again later")
                 }
                 else {
-                    bot.sendMessage(this.chatId, key)
+                    bot.sendMessage(this.chatIdClient, key)
                 }
             }
             )
-            await bot.sendMessage(this.chatId, `Готово, подпишитесь на канал, чтобы быть в курсе обновлений\nhttps://t.me/cryptonbaza`, againOptions);
+
         }
     };
 }

@@ -9,7 +9,7 @@ const MAX_KEYS_PER_GAME_PER_DAY = 6;
 
  const http = require('http');
 
- const server = http.createServer()y;
+ const server = http.createServer();
  server.listen(port);
 
 process.setMaxListeners(0);
